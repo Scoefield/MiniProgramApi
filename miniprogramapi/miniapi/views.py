@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django_redis import get_redis_connection
+from django.conf import settings
 
 
 def phone_validator(value):
@@ -26,7 +27,7 @@ class MessageView(APIView):
     ''' 获取验证码 '''
     
     def __init__(self):
-        self.expireTime = 60 * 2  # 2 分钟过期
+        self.expireTime = settings.MSG_CONFIG.get("EXPIRE_TIME", 60)
 
     def get(self, request, *arges, **kwargs):
         # 1. 获取手机号

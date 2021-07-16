@@ -142,7 +142,7 @@ MSG_CONFIG = {
     "SECRET_ID": "AKIDykGXZLq41i8H9k35rMaYFemeFvKSJtCD",
     "SECRET_KEY": "lFSO3SaQzIK5ZmiNlsiGXXGitnQmrfCS",
     "SDKAPP_ID": "1400545038",
-    "EXPIRE_TIME": 68 * 2,  # 2 分钟过期
+    "EXPIRE_TIME": 60,  # 1 分钟过期
     "SING": "Go键盘侠公众号",
     "CITY": "ap-guangzhou"
 }
