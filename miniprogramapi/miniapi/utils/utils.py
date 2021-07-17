@@ -17,7 +17,7 @@ from tencentcloud.common.profile.http_profile import HttpProfile
 from django.conf import settings
 
 
-def send_massage(phone, random_code, template_id="1031737", second_param="2"):
+def send_massage(phone, random_code, template_id="1031737", second_param="1"):
     '''
     4. 验证码发送到手机，购买服务器进行发送短信：阿里云/腾讯云
     # 4.1 注册腾讯云，开通短信云服务

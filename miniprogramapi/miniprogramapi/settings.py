@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework'
+    'rest_framework',
+    'miniapi.apps.MiniapiConfig',
 ]
 
 MIDDLEWARE = [
@@ -142,7 +143,7 @@ MSG_CONFIG = {
     "SECRET_ID": "AKIDykGXZLq41i8H9k35rMaYFemeFvKSJtCD",
     "SECRET_KEY": "lFSO3SaQzIK5ZmiNlsiGXXGitnQmrfCS",
     "SDKAPP_ID": "1400545038",
-    "EXPIRE_TIME": 60,  # 1 分钟过期
+    "EXPIRE_TIME": 60 * 1,  # 1 分钟过期
     "SING": "Go键盘侠公众号",
     "CITY": "ap-guangzhou"
 }

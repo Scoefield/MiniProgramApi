@@ -1,26 +1,16 @@
+import re
+import uuid
 from http.client import error
 from miniapi.utils.utils import send_massage
-import re
 from django.http import response
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from django_redis import get_redis_connection
 from django.conf import settings
-
-
-def phone_validator(value):
-    if not re.match(r"^(1[3|4|5|6|7|8|9])\d{9}$", value):
-        raise ValidationError("手机号格式错误！")
-
-class MessageSerializer(serializers.Serializer):
-    # 实质的验证顺序：内部是否为空的校验，validators列表里的函数，钩子函数
-    phone = serializers.CharField(label="手机号", validators=[phone_validator,])
-    # 钩子函数，这里不另外写了
-    # def validated_phone(self, value):
-    #     pass
+from miniapi import models
+from .serializer.account import MessageSerializer, LoginSerializer
 
 
 class MessageView(APIView):
@@ -34,7 +24,7 @@ class MessageView(APIView):
         # 2. 校验手机号格式
         ser = MessageSerializer(data=request.query_params)
         if not ser.is_valid():
-            return response({"status": False, "message": "手机号格式错误！"})
+            return Response({"status": False, "message": "手机号格式错误！"})
         phone = ser.validated_data.get("phone")
         print("phone:", phone)
 
@@ -43,10 +33,11 @@ class MessageView(APIView):
         random_code = random.randint(1000, 9999)
         print("code", random_code)
 
+        # todo: 已经测试成功了，调试时注释掉第四步，发短信服务有限制
         # 4. 验证码发送到手机，购买服务器进行发送短信：阿里云/腾讯云
-        send_msg_ret = send_massage(phone, random_code)
-        if not send_msg_ret.get("status"):
-            return Response(send_msg_ret)
+        # send_msg_ret = send_massage(phone, random_code)
+        # if not send_msg_ret.get("status"):
+        #     return Response(send_msg_ret)
         
         # 5. 验证码 + 手机号 保留（redis 设置 30s 过期）
         # 5.1 搭建 redis 服务
@@ -68,24 +59,39 @@ class MessageView(APIView):
 
 
 class LoginView(APIView):
-    '''登录'''
+    '''
+    登录：
+        1. 无验证码
+        2. 有验证码，验证码错误
+        3. 验证成功
+    '''
     def post(self, request, *args, **kwargs):
         # 获取参数
-        data = request.data
-        print("data=", data)
+        # data = request.data
+        # print("data=", data)
+        # phone = data.get("phone")
+        # input_code = data.get("code")
 
-        phone = data.get("phone")
-        input_code = data.get("code")
-        # redis 句柄
-        conn = get_redis_connection()
-        redis_code = conn.get(phone)
-        print("phone:{}, input_code:{}, redis_code:{}".format(phone, input_code, redis_code))
-
-        if not redis_code:
-            return Response({"status": False, "message": "输入的验证码已过期，请重新获取！"})
+        ser = LoginSerializer(data=request.data)
+        print("ser=", ser)
+        if not ser.is_valid():
+            return Response({"status": False, "message": "验证码错误"})
         
-        # 校验输入和redis 的 code 是否一致
-        if input_code != redis_code:
-            return Response({"status": False, "message": "输入的验证码有误！"})
+        # 根据手机号去数据库获取用户信息
+        phone = ser.validated_data.get("phone")
+
+        # 4. 获取不到用户信息，则创建；获取到，则更新token
+        # 写法一：
+        # user = models.UserInfo.objects.filter(phone=phone).first()
+        # if not user:
+        #     models.UserInfo.objects.create(phone=phone, token=str(uuid.uuid4()))
+        # else:
+        #     user.token = str(uuid.uuid4())
+        #     user.save()
+        
+        # 写法二：
+        user_obj, flag = models.UserInfo.objects.get_or_create(phone=phone)
+        user_obj.token = str(uuid.uuid4())
+        user_obj.save()
 
         return Response({"status": True, "message": "登录成功"})
