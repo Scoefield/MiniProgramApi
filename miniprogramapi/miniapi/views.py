@@ -53,7 +53,8 @@ class MessageView(APIView):
         # 方式二（django-redis模块）：
         conn = get_redis_connection()
         ret = conn.set(phone, random_code, ex=self.expireTime)
-        print("set redis ret: ", ret)     
+        if not ret:
+            Response({"status": False, "message": "验证码写入redis错误"})
 
         return Response({"status": True, "message": "验证码发送成功"})
 
@@ -73,7 +74,6 @@ class LoginView(APIView):
         # input_code = data.get("code")
 
         ser = LoginSerializer(data=request.data)
-        print("ser=", ser)
         if not ser.is_valid():
             return Response({"status": False, "message": "验证码错误"})
         
@@ -94,4 +94,4 @@ class LoginView(APIView):
         user_obj.token = str(uuid.uuid4())
         user_obj.save()
 
-        return Response({"status": True, "message": "登录成功"})
+        return Response({"status": True, "message": "登录成功", "data": {"token": user_obj.token, "phone": user_obj.phone}})
